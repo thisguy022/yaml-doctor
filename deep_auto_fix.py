@@ -25,28 +25,29 @@ def rename_duplicate_keys(data: CommentedMap) -> CommentedMap:
 
     return fixed
 
-def fix_yaml_file(path: str, output_path: str = None):
-    if not os.path.exists(path):
-        print(f"❌ File not found: {path}")
-        return
+def fix_yaml_file(in_path, out_path):
+    yaml = YAML()
+    yaml.preserve_quotes = True
 
-    with open(path, 'r') as f:
-        original = yaml.load(f)
+    with open(in_path, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
 
-    fixed = rename_duplicate_keys(original)
+    fixed_lines = []
+    seen_keys = {}
 
-    out_file = output_path or path
-    with open(out_file, 'w') as f:
-        yaml.dump(fixed, f)
+    for line in lines:
+        if ':' in line:
+            key_part = line.split(':', 1)[0].strip()
+            if key_part in seen_keys:
+                seen_keys[key_part] += 1
+                new_key = f"{key_part}__{seen_keys[key_part]}"
+                line = line.replace(key_part, new_key, 1)
+            else:
+                seen_keys[key_part] = 0
+        fixed_lines.append(line)
 
-    print(f"✅ Fixed YAML written to: {out_file}")
+    with open(out_path, 'w', encoding='utf-8') as f:
+        f.writelines(fixed_lines)
 
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python deep_auto_fix.py <file.yaml> [output.yaml]")
-        sys.exit(1)
+    print(f"✅ Fixed YAML written to: {out_path}")
 
-    in_path = sys.argv[1]
-    out_path = sys.argv[2] if len(sys.argv) > 2 else None
-
-    fix_yaml_file(in_path, out_path)
