@@ -30,24 +30,64 @@ def fix_yaml_file(in_path, out_path):
     yaml.preserve_quotes = True
 
     with open(in_path, 'r', encoding='utf-8') as f:
-        lines = f.readlines()
+        content = f.read()
 
-    fixed_lines = []
-    seen_keys = {}
+    # Try to load safely first
+    try:
+        yaml.load(content)
+        print("✅ No duplicates detected.")
+        return
+    except Exception as e:
+        print(f"⚠️ YAML issue detected: {e}")
+        print("🔁 Attempting to auto-fix...")
+
+    from collections import defaultdict
+    import re
+
+    lines = content.split('\n')
+    key_counts = defaultdict(int)
+    indent_stack = []
+    context_keys = []
+
+    new_lines = []
 
     for line in lines:
-        if ':' in line:
-            key_part = line.split(':', 1)[0].strip()
-            if key_part in seen_keys:
-                seen_keys[key_part] += 1
-                new_key = f"{key_part}__{seen_keys[key_part]}"
-                line = line.replace(key_part, new_key, 1)
-            else:
-                seen_keys[key_part] = 0
-        fixed_lines.append(line)
+        match = re.match(r'^(\s*)([^\s:#]+):(.*)', line)
+        if match:
+            indent, key, rest = match.groups()
+            current_indent = len(indent)
+
+            # Adjust context based on indentation
+            while indent_stack and indent_stack[-1] >= current_indent:
+                indent_stack.pop()
+                context_keys.pop()
+
+            full_key = '.'.join(context_keys + [key.strip()])
+            key_counts[full_key] += 1
+
+            if key_counts[full_key] > 1:
+                key = f"{key.strip()}__dup{key_counts[full_key] - 1}"
+                print(f"🔁 Renamed duplicate key at indent {current_indent}: → {key}")
+
+            new_lines.append(f"{indent}{key}:{rest}")
+
+            # Only push to context if this key starts a new nested block
+            if rest.strip() == "":
+                indent_stack.append(current_indent)
+                context_keys.append(key.strip())
+        else:
+            new_lines.append(line)
+
+    # Re-parse fixed YAML to ensure it’s valid
+    try:
+        data = yaml.load('\n'.join(new_lines))
+    except Exception as e:
+        print("❌ Could not fix YAML:", e)
+        return
 
     with open(out_path, 'w', encoding='utf-8') as f:
-        f.writelines(fixed_lines)
+        yaml.dump(data, f)
 
     print(f"✅ Fixed YAML written to: {out_path}")
+
 
