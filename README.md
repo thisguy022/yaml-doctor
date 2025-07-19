@@ -1,4 +1,5 @@
 # YAML-Doctor
+[![PyPI version](https://badge.fury.io/py/yaml-doctor.svg)](https://pypi.org/project/yaml-doctor/)
 
 ![CI](https://github.com/thisguy022/yaml-doctor/actions/workflows/ci.yml/badge.svg)
 
