@@ -30,63 +30,35 @@ def fix_yaml_file(in_path, out_path):
     yaml.preserve_quotes = True
 
     with open(in_path, 'r', encoding='utf-8') as f:
-        content = f.read()
+        lines = f.readlines()
 
-    # Try to load safely first
-    try:
-        yaml.load(content)
-        print("✅ No duplicates detected.")
-        return
-    except Exception as e:
-        print(f"⚠️ YAML issue detected: {e}")
-        print("🔁 Attempting to auto-fix...")
-
-    from collections import defaultdict
-    import re
-
-    lines = content.split('\n')
-    key_counts = defaultdict(int)
-    indent_stack = []
-    context_keys = []
-
-    new_lines = []
+    fixed_lines = []
+    key_tracker = {}
+    current_indent = 0
 
     for line in lines:
-        match = re.match(r'^(\s*)([^\s:#]+):(.*)', line)
-        if match:
-            indent, key, rest = match.groups()
-            current_indent = len(indent)
+        if ':' in line and not line.strip().startswith('#'):
+            leading_spaces = len(line) - len(line.lstrip())
+            key_part = line.split(':', 1)[0].strip()
 
-            # Adjust context based on indentation
-            while indent_stack and indent_stack[-1] >= current_indent:
-                indent_stack.pop()
-                context_keys.pop()
+            # Build a context key based on indentation
+            context_key = f"{leading_spaces}:{key_part}"
 
-            full_key = '.'.join(context_keys + [key.strip()])
-            key_counts[full_key] += 1
+            if context_key in key_tracker:
+                key_tracker[context_key] += 1
+                new_key = f"{key_part}__dup{key_tracker[context_key]}"
+                print(f"🔁 Renaming duplicate '{key_part}' → '{new_key}'")
+                line = line.replace(key_part, new_key, 1)
+            else:
+                key_tracker[context_key] = 0
 
-            if key_counts[full_key] > 1:
-                key = f"{key.strip()}__dup{key_counts[full_key] - 1}"
-                print(f"🔁 Renamed duplicate key at indent {current_indent}: → {key}")
-
-            new_lines.append(f"{indent}{key}:{rest}")
-
-            # Only push to context if this key starts a new nested block
-            if rest.strip() == "":
-                indent_stack.append(current_indent)
-                context_keys.append(key.strip())
-        else:
-            new_lines.append(line)
-
-    # Re-parse fixed YAML to ensure it’s valid
-    try:
-        data = yaml.load('\n'.join(new_lines))
-    except Exception as e:
-        print("❌ Could not fix YAML:", e)
-        return
+        fixed_lines.append(line)
 
     with open(out_path, 'w', encoding='utf-8') as f:
-        yaml.dump(data, f)
+        f.writelines(fixed_lines)
+
+    print(f"✅ Fixed YAML written to: {out_path}")
+
 
     print(f"✅ Fixed YAML written to: {out_path}")
 
