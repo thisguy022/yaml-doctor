@@ -1,3 +1,4 @@
+print(">>> running NEW deep_auto_fix.py from", __file__)
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap
 from collections import defaultdict
