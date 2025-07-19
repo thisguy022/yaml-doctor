@@ -1,65 +1,65 @@
 from ruamel.yaml import YAML
 from ruamel.yaml.comments import CommentedMap
-from ruamel.yaml.constructor import DuplicateKeyError
+from collections import defaultdict
 import sys
-import os
 
-yaml = YAML()
-yaml.preserve_quotes = True
-yaml.allow_duplicate_keys = True  # We'll fix them, not reject them
+def rename_duplicate_keys_preserve_structure(yaml_lines):
+    new_lines = []
+    context_stack = []
+    indent_levels = []
+    key_count = defaultdict(int)
 
-def rename_duplicate_keys(data: CommentedMap) -> CommentedMap:
-    seen = {}
-    fixed = CommentedMap()
-    
-    for key, value in data.items():
-        if key in seen:
-            seen[key] += 1
-            new_key = f"{key}__dup{seen[key]}"
-            print(f"🔁 Renamed duplicate key '{key}' → '{new_key}'")
+    for line in yaml_lines:
+        if ':' not in line or line.strip().startswith('#') or line.strip() == '':
+            new_lines.append(line)
+            continue
+
+        indent = len(line) - len(line.lstrip())
+        key = line.strip().split(':')[0]
+
+        # Adjust stack if indentation decreased
+        while indent_levels and indent < indent_levels[-1]:
+            indent_levels.pop()
+            context_stack.pop()
+
+        # Build full key path
+        full_path = '.'.join(context_stack + [key])
+        key_count[full_path] += 1
+
+        if key_count[full_path] > 1:
+            new_key = f"{key}__dup{key_count[full_path]-1}"
+            print(f"🔁 Renaming '{key}' → '{new_key}'")
+            new_line = line.replace(key, new_key, 1)
         else:
-            seen[key] = 0
             new_key = key
+            new_line = line
 
-        fixed[new_key] = value
+        # If this is a mapping that opens a new block
+        if line.rstrip().endswith(':') or line.strip().endswith(': |') or line.strip().endswith(': >'):
+            indent_levels.append(indent)
+            context_stack.append(new_key)
 
-    return fixed
+        new_lines.append(new_line)
 
-def fix_yaml_file(in_path, out_path):
-    yaml = YAML()
-    yaml.preserve_quotes = True
+    return new_lines
 
-    with open(in_path, 'r', encoding='utf-8') as f:
+def fix_yaml_file(input_file, output_file):
+    with open(input_file, 'r', encoding='utf-8') as f:
         lines = f.readlines()
 
-    fixed_lines = []
-    key_tracker = {}
-    current_indent = 0
+    fixed_lines = rename_duplicate_keys_preserve_structure(lines)
 
-    for line in lines:
-        if ':' in line and not line.strip().startswith('#'):
-            leading_spaces = len(line) - len(line.lstrip())
-            key_part = line.split(':', 1)[0].strip()
-
-            # Build a context key based on indentation
-            context_key = f"{leading_spaces}:{key_part}"
-
-            if context_key in key_tracker:
-                key_tracker[context_key] += 1
-                new_key = f"{key_part}__dup{key_tracker[context_key]}"
-                print(f"🔁 Renaming duplicate '{key_part}' → '{new_key}'")
-                line = line.replace(key_part, new_key, 1)
-            else:
-                key_tracker[context_key] = 0
-
-        fixed_lines.append(line)
-
-    with open(out_path, 'w', encoding='utf-8') as f:
+    with open(output_file, 'w', encoding='utf-8') as f:
         f.writelines(fixed_lines)
 
-    print(f"✅ Fixed YAML written to: {out_path}")
+    print(f"✅ Fixed YAML written to: {output_file}")
 
+if __name__ == "__main__":
+    if len(sys.argv) < 3:
+        print("Usage: python deep_auto_fix.py input.yaml output.yaml")
+        sys.exit(1)
 
-    print(f"✅ Fixed YAML written to: {out_path}")
+    fix_yaml_file(sys.argv[1], sys.argv[2])
+
 
 
