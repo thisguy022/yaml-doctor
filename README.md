@@ -1,25 +1,24 @@
-# YAML-Doctor
+# YAML-Doctor 🩺📄  
 [![PyPI version](https://badge.fury.io/py/yaml-doctor.svg)](https://pypi.org/project/yaml-doctor/)
+[![CI](https://github.com/thisguy022/yaml-doctor/actions/workflows/ci.yml/badge.svg)](https://github.com/thisguy022/yaml-doctor/actions/workflows/ci.yml)
 
-![CI](https://github.com/thisguy022/yaml-doctor/actions/workflows/ci.yml/badge.svg)
+Validate – and automatically **fix duplicate keys** – in Home-Assistant-style YAML files.  
+No more mysterious “duplicated mapping key” errors breaking your automations!
 
-Validate — and automatically **fix duplicate keys** — in Home-Assistant-style YAML files.
+---
 
-## Installation
+## ✨ Features
+- **Fast validation** of any YAML file (Home Assistant, ESPHome, CI pipelines, etc.)
+- **Smart auto-fix** `--fix` flag renames duplicate keys in-place (optionally backs up originals)
+- **Colorful Rich output** for quick at-a-glance feedback
+- **Zero-config CLI** – just run `yaml-doctor your_file.yaml`
+- Works on **Windows, macOS, and Linux** (Python ≥ 3.9)
+
+---
+
+## 📦 Installation
+
+### User install (from PyPI – easiest)
 
 ```bash
-git clone https://github.com/thisguy022/yaml-doctor.git
-cd yaml-doctor
-pip install -r requirements.txt
-
-## Usage
-
-| Action | Command |
-|--------|---------|
-| **Validate only** | `python yaml_doctor.py your_file.yaml` |
-| **Validate and auto-fix duplicates** | `python yaml_doctor.py your_file.yaml --fix` |
-
-## Contributing
-
-Pull requests are welcome!  
-Make sure `python -m unittest` passes and CI is green.
+pip install yaml-doctor
