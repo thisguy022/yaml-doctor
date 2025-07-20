@@ -1,6 +1,6 @@
 [project]
 name = "yaml-doctor"
-version = "0.1.0"
+version = "0.1.1"
 description = "A CLI tool to detect and auto-fix common issues in Home Assistant YAML files."
 readme = "README.md"
 requires-python = ">=3.9"
