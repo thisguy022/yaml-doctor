@@ -1,0 +1,24 @@
+[project]
+name = "yaml-doctor"
+version = "0.1.0"
+description = "A CLI tool to detect and auto-fix common issues in Home Assistant YAML files."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [
+  { name = "Jason Clark", email = "your@email.com" }
+]
+dependencies = [
+  "ruamel.yaml>=0.17.40",
+  "rich>=13.0.0"
+]
+
+[tool.setuptools]
+py-modules = ["yaml_doctor", "deep_auto_fix"]
+
+[project.scripts]
+yaml-doctor = "yaml_doctor:main"
+
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
