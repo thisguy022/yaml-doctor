@@ -30,7 +30,7 @@ jobs:
         run: python -m unittest discover -v
 
       - name: Lint with Ruff
-        run: ruff .
+        run: ruff check .
 
       - name: Build wheel + sdist
         run: python -m build
