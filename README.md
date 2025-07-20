@@ -22,3 +22,21 @@ No more mysterious “duplicated mapping key” errors breaking your automations
 
 ```bash
 pip install yaml-doctor
+
+🚀 Usage
+Goal	Command
+Validate only	yaml-doctor ENTER YOUR FILE.yaml
+Validate & auto-fix duplicates	yaml-doctor path/to/file.yaml --fix
+Show full CLI help	yaml-doctor --help
+
+
+## EXAMPLE
+yaml-doctor secrets.yaml --fix
+# 🔍 Running validation before fix…
+# ❌ Duplicate key “sensor” found at line 12 – renaming to sensor_1
+# 🎉 File fixed successfully.
+
+📄 License
+MIT © Jason Clark – use it, ship it, enjoy fewer YAML headaches!
+
+
